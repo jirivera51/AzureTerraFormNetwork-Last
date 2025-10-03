@@ -8,10 +8,6 @@ terraform {
   required_version = ">= 1.5.0"
 }
 
-provider "azurerm" {
-  features {}
-}
-
 # 1 - Resource Group
 resource "azurerm_resource_group" "demo1" {
   name     = "demo1"
