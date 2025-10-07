@@ -8,10 +8,10 @@ on:
       action:
         description: 'Terraform Action'
         required: true
-        default: 'apply'
+        default: 'deploy'
         type: choice
         options:
-          - apply
+          - deploy
           - destroy
 
 jobs:
