@@ -34,7 +34,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-      # Step 4: Terraform Init
+      # Step 4: Download previous state file (if exists)
+      - name: Download Terraform State
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true
+        with:
+          name: terraform-state
+          workflow: deploy.yml
+          branch: main
+          path: .
+      
+      # Step 5: Terraform Init
       - name: Terraform Init
         env:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
@@ -43,7 +53,7 @@ jobs:
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform init
       
-      # Step 5: Terraform Plan (for apply)
+      # Step 6: Terraform Plan (for apply)
       - name: Terraform Plan
         if: github.event.inputs.action != 'destroy' || github.event_name == 'push'
         env:
@@ -53,7 +63,7 @@ jobs:
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform plan -out=tfplan
       
-      # Step 6: Terraform Apply
+      # Step 7: Terraform Apply
       - name: Terraform Apply
         if: github.event.inputs.action != 'destroy' || github.event_name == 'push'
         env:
@@ -63,7 +73,7 @@ jobs:
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform apply -auto-approve tfplan
       
-      # Step 7: Terraform Destroy Plan (for destroy)
+      # Step 8: Terraform Destroy Plan (for destroy)
       - name: Terraform Destroy Plan
         if: github.event.inputs.action == 'destroy'
         env:
@@ -73,7 +83,7 @@ jobs:
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform plan -destroy -out=tfplan-destroy
       
-      # Step 8: Terraform Destroy
+      # Step 9: Terraform Destroy
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'
         env:
@@ -82,3 +92,15 @@ jobs:
           ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform apply -auto-approve tfplan-destroy
+      
+      # Step 10: Upload state file for next run
+      - name: Upload Terraform State
+        if: github.event.inputs.action != 'destroy'
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-state
+          path: |
+            terraform.tfstate
+            terraform.tfstate.backup
+            .terraform/
+          retention-days: 90
