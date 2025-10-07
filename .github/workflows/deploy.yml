@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main   # runs only on pushes to main branch
+  #schedule:
+  #  - cron: '0 9 * * 1'  # Runs every Monday at 9:00 AM UTC
   workflow_dispatch:   # lets you run manually from GitHub UI
     inputs:
       action:
@@ -43,6 +45,7 @@ jobs:
           workflow: deploy.yml
           branch: main
           path: .
+          if_no_artifact_found: warn
       
       # Step 5: Terraform Init
       - name: Terraform Init
