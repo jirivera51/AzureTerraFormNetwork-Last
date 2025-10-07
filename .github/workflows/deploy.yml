@@ -23,6 +23,8 @@ jobs:
       # Step 1: Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          submodules: false
       
       # Step 2: Setup Terraform
       - name: Setup Terraform
@@ -43,6 +45,7 @@ jobs:
         with:
           name: terraform-state
           workflow: deploy.yml
+          workflow_conclusion: ""
           branch: main
           path: .
           if_no_artifact_found: warn
