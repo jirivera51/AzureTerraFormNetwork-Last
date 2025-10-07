@@ -45,10 +45,8 @@ jobs:
         with:
           name: terraform-state
           workflow: deploy.yml
-          workflow_conclusion: ""
           branch: main
           path: .
-          if_no_artifact_found: warn
       
       # Step 5: Terraform Init
       - name: Terraform Init
