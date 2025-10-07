@@ -1,32 +1,39 @@
 name: Deploy to Azure with Terraform
-
 on:
   push:
     branches:
       - main   # runs only on pushes to main branch
   workflow_dispatch:   # lets you run manually from GitHub UI
+    inputs:
+      action:
+        description: 'Terraform Action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
     steps:
       # Step 1: Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v4
-
+      
       # Step 2: Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.0   # pick version you prefer
-
+      
       # Step 3: Login to Azure using the Service Principal
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+      
       # Step 4: Terraform Init
       - name: Terraform Init
         env:
@@ -35,21 +42,43 @@ jobs:
           ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform init
-
-      # Step 5: Terraform Plan
+      
+      # Step 5: Terraform Plan (for apply)
       - name: Terraform Plan
+        if: github.event.inputs.action != 'destroy' || github.event_name == 'push'
         env:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
           ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform plan -out=tfplan
-
+      
       # Step 6: Terraform Apply
       - name: Terraform Apply
+        if: github.event.inputs.action != 'destroy' || github.event_name == 'push'
         env:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
           ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
           ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
         run: terraform apply -auto-approve tfplan
+      
+      # Step 7: Terraform Destroy Plan (for destroy)
+      - name: Terraform Destroy Plan
+        if: github.event.inputs.action == 'destroy'
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+          ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+        run: terraform plan -destroy -out=tfplan-destroy
+      
+      # Step 8: Terraform Destroy
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+          ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+        run: terraform apply -auto-approve tfplan-destroy
