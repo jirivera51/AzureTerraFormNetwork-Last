@@ -45,8 +45,10 @@ jobs:
         with:
           name: terraform-state
           workflow: deploy.yml
-          branch: main
+          branch: ${{ github.ref_name }}  # Dynamic branch reference
           path: .
+          search_artifacts: true
+          skip_unpack: false
       
       # Step 5: Terraform Init
       - name: Terraform Init
