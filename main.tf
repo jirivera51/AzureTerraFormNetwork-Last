@@ -193,6 +193,7 @@ resource "azurerm_lb_rule" "http_rule" {
   frontend_ip_configuration_name = "PublicIPAddress"
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.web_backend.id]
   probe_id                       = azurerm_lb_probe.http_probe.id
+  load_distribution              = "SourceIP"  # Options: Default (5-tuple), SourceIP (2-tuple), SourceIPProtocol (3-tuple)
 }
 
 # Availability Set
