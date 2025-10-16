@@ -268,8 +268,13 @@ resource "azurerm_virtual_machine_extension" "web_iis" {
   })
 }
 
+# NOTE: Automation Account requires service principal with "User Access Administrator" 
+# or "Owner" role to create role assignments. Comment out this section if you get 
+# authorization errors, or grant additional permissions to your service principal.
+
 # Automation Account
 resource "azurerm_automation_account" "auto_demo1" {
+  count               = 0  # Set to 1 to enable auto start/stop
   name                = "aa-demo1-startstop"
   location            = azurerm_resource_group.demo1.location
   resource_group_name = azurerm_resource_group.demo1.name
@@ -282,18 +287,19 @@ resource "azurerm_automation_account" "auto_demo1" {
 
 # Role Assignment
 resource "azurerm_role_assignment" "auto_contributor" {
+  count                = 0  # Set to 1 to enable auto start/stop
   scope                = azurerm_resource_group.demo1.id
   role_definition_name = "Virtual Machine Contributor"
-  principal_id         = azurerm_automation_account.auto_demo1.identity[0].principal_id
+  principal_id         = azurerm_automation_account.auto_demo1[0].identity[0].principal_id
 }
 
 # Runbooks (Start and Stop)
 resource "azurerm_automation_runbook" "vm_runbooks" {
-  for_each                = { start = "Start", stop = "Stop" }
+  for_each                = length(azurerm_automation_account.auto_demo1) > 0 ? { start = "Start", stop = "Stop" } : {}
   name                    = "${each.value}-AllVMs"
   location                = azurerm_resource_group.demo1.location
   resource_group_name     = azurerm_resource_group.demo1.name
-  automation_account_name = azurerm_automation_account.auto_demo1.name
+  automation_account_name = azurerm_automation_account.auto_demo1[0].name
   log_verbose             = true
   log_progress            = true
   runbook_type            = "PowerShell"
@@ -305,10 +311,10 @@ resource "azurerm_automation_runbook" "vm_runbooks" {
 
 # Schedules
 resource "azurerm_automation_schedule" "vm_schedules" {
-  for_each                = local.schedules
+  for_each                = length(azurerm_automation_account.auto_demo1) > 0 ? local.schedules : {}
   name                    = "${title(each.key)}-VMs-Schedule"
   resource_group_name     = azurerm_resource_group.demo1.name
-  automation_account_name = azurerm_automation_account.auto_demo1.name
+  automation_account_name = azurerm_automation_account.auto_demo1[0].name
   frequency               = "Week"
   interval                = 1
   timezone                = "America/Puerto_Rico"
@@ -319,9 +325,9 @@ resource "azurerm_automation_schedule" "vm_schedules" {
 
 # Job Schedules
 resource "azurerm_automation_job_schedule" "job_schedules" {
-  for_each                = local.schedules
+  for_each                = length(azurerm_automation_account.auto_demo1) > 0 ? local.schedules : {}
   resource_group_name     = azurerm_resource_group.demo1.name
-  automation_account_name = azurerm_automation_account.auto_demo1.name
+  automation_account_name = azurerm_automation_account.auto_demo1[0].name
   schedule_name           = azurerm_automation_schedule.vm_schedules[each.key].name
   runbook_name            = azurerm_automation_runbook.vm_runbooks[each.key].name
 
