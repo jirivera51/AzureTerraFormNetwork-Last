@@ -311,7 +311,7 @@ resource "azurerm_automation_schedule" "vm_schedules" {
   automation_account_name = azurerm_automation_account.auto_demo1.name
   frequency               = "Week"
   interval                = 1
-  timezone                = "Eastern Standard Time"
+  timezone                = "America/Puerto_Rico"
   start_time              = timeadd(timestamp(), "24h")
   week_days               = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
   description             = each.value.description
