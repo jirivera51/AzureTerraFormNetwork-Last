@@ -350,5 +350,5 @@ output "web_vm_names" {
 }
 
 output "automation_account_name" {
-  value = azurerm_automation_account.auto_demo1.name
+  value = length(azurerm_automation_account.auto_demo1) > 0 ? azurerm_automation_account.auto_demo1[0].name : "Not deployed - enable in main.tf"
 }
