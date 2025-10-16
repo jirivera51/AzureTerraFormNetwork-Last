@@ -51,11 +51,11 @@ jobs:
           skip_unpack: false
       
       # Step 4b: Clean state if needed (optional - use for fresh start)
-      - name: Remove old state files
-        run: |
-           rm -f terraform.tfstate
-           rm -f terraform.tfstate.backup
-           rm -rf .terraform/
+      #- name: Remove old state files
+      #  run: |
+      #     rm -f terraform.tfstate
+      #     rm -f terraform.tfstate.backup
+      #     rm -rf .terraform/
       
       # Step 5: Terraform Init
       - name: Terraform Init
