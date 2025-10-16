@@ -27,7 +27,7 @@ variable "admin_password" {
 
 # Locals for reusable values
 locals {
-  location = "East US 2"  # Changed from "East US" - usually has better capacity
+  location = "East US 2"  # Keeping original region
   rg_name  = "demo1"
   
   nsg_rules = {
@@ -39,7 +39,7 @@ locals {
   web_vm_count = 2
   
   common_vm_config = {
-    size            = "Standard_B2ms"  # Changed from B2s - more available
+    size            = "Standard_D2s_v3"  # Most reliable availability
     admin_username  = var.admin_username
     admin_password  = var.admin_password
     publisher       = "MicrosoftWindowsServer"
@@ -193,7 +193,8 @@ resource "azurerm_lb_rule" "http_rule" {
   frontend_ip_configuration_name = "PublicIPAddress"
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.web_backend.id]
   probe_id                       = azurerm_lb_probe.http_probe.id
-  load_distribution              = "SourceIP"  # Options: Default (5-tuple), SourceIP (2-tuple), SourceIPProtocol (3-tuple)
+  # Remove or comment out load_distribution for true round-robin per connection
+  # load_distribution            = "SourceIP"
 }
 
 # Availability Set
@@ -275,7 +276,7 @@ resource "azurerm_virtual_machine_extension" "web_iis" {
 
 # Automation Account
 resource "azurerm_automation_account" "auto_demo1" {
-  count               = 0  # Set to 1 to enable auto start/stop
+  count               = 1  # Set to 1 to enable auto start/stop
   name                = "aa-demo1-startstop"
   location            = azurerm_resource_group.demo1.location
   resource_group_name = azurerm_resource_group.demo1.name
@@ -288,7 +289,7 @@ resource "azurerm_automation_account" "auto_demo1" {
 
 # Role Assignment
 resource "azurerm_role_assignment" "auto_contributor" {
-  count                = 0  # Set to 1 to enable auto start/stop
+  count                = 1  # Set to 1 to enable auto start/stop
   scope                = azurerm_resource_group.demo1.id
   role_definition_name = "Virtual Machine Contributor"
   principal_id         = azurerm_automation_account.auto_demo1[0].identity[0].principal_id
