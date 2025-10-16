@@ -27,7 +27,7 @@ variable "admin_password" {
 
 # Locals for reusable values
 locals {
-  location = "East US"
+  location = "East US 2"  # Changed from "East US" - usually has better capacity
   rg_name  = "demo1"
   
   nsg_rules = {
@@ -39,7 +39,7 @@ locals {
   web_vm_count = 2
   
   common_vm_config = {
-    size            = "Standard_B2s"
+    size            = "Standard_B2ms"  # Changed from B2s - more available
     admin_username  = var.admin_username
     admin_password  = var.admin_password
     publisher       = "MicrosoftWindowsServer"
