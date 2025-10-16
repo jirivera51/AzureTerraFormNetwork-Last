@@ -1,8 +1,9 @@
 name: Deploy to Azure with Terraform
 on:
-  push:
-    branches:
-      - main   # runs only on pushes to main branch
+  # Automatic deployment on push disabled - use manual workflow_dispatch only
+  #push:
+  #  branches:
+  #    - main   # runs only on pushes to main branch
   #schedule:
   #  - cron: '0 9 * * 1'  # Runs every Monday at 9:00 AM UTC
   workflow_dispatch:   # lets you run manually from GitHub UI
@@ -51,8 +52,8 @@ jobs:
           skip_unpack: false
       
       # Step 4b: Clean state if needed (optional - use for fresh start)
-      #- name: Remove old state files
-      #  run: |
+      # - name: Remove old state files
+      #   run: |
       #     rm -f terraform.tfstate
       #     rm -f terraform.tfstate.backup
       #     rm -rf .terraform/
